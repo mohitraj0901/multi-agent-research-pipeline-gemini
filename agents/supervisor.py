@@ -135,12 +135,23 @@ class SupervisorAgent(BaseAgent):
                     }
                 
                 return updates
+
+            # Deterministic routing for required workflow stages
+            if state['content_draft'] and state['fact_check_status'] != 'completed':
+                decision = SupervisorDecision(
+                    next_agent='fact_checker',
+                    reasoning='Content created but fact checking is not completed',
+                    instructions='Fact-check the content claims against reliable web evidence',
+                    confidence=1.0
+                )
+            else:
+                # Build context from state
+                context = self._build_context(state)
+
+                # Get decision from LLM
+                decision = self._make_routing_decision(state, context)
             
-            # Build context from state
-            context = self._build_context(state)
             
-            # Get decision from LLM
-            decision = self._make_routing_decision(state, context)
             
             # Record decision
             self.decision_history.append({
