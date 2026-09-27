@@ -182,8 +182,3 @@ The reported result is from a local test run and is not intended as a general be
 MIT License
 
 
-**Important:** Is README mein humne intentionally ye clear rakha hai ki project **existing multi-agent workflow ko extend** karta hai. Ye tumhe original author hone ka misleading impression nahi dega.
-
-Save karne ke baad **abhi commit/push mat karna**.
-
-Bas mujhe bata **README save ho gaya**. Phir next step
