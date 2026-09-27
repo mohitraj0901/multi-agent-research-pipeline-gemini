@@ -1,386 +1,189 @@
-# 🤖 Multi-Agent AI Research & Content Pipeline
+# 🤖 Multi-Agent Research & Content Pipeline
 
-A production-grade autonomous multi-agent system built with **LangGraph** and **Azure OpenAI** that researches topics, generates high-quality content, and ensures accuracy through iterative review cycles.
+A multi-agent AI research and content generation pipeline built with **LangGraph**, **Google Gemini**, and **Tavily**.
 
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![LangGraph](https://img.shields.io/badge/LangGraph-0.2.34-green.svg)](https://github.com/langchain-ai/langgraph)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
----
-![Agentic AI Poster](screenshots/poster.png)
+This project extends an existing multi-agent workflow with a Gemini-based LLM integration and an automated **Fact Checker agent** that verifies factual claims using web evidence before content reaches the final review stage.
 
 ## 🎯 Overview
 
-This system demonstrates advanced **Agentic AI** patterns with four specialized agents working together autonomously:
+The pipeline coordinates specialized agents through a shared state and Supervisor-based routing:
 
-- **🎯 Supervisor Agent**: Orchestrates workflow and routes tasks
-- **🔍 Researcher Agent**: Searches web using Tavily API and validates sources
-- **✍️ Content Creator Agent**: Generates professional content with citations
-- **✅ Reviewer Agent**: Validates quality and provides iterative feedback
+- **🎯 Supervisor Agent** — Orchestrates the workflow and decides which agent runs next
+- **🔎 Researcher Agent** — Performs live web research using Tavily
+- **✍️ Content Creator Agent** — Generates structured content from research findings
+- **🔍 Fact Checker Agent** — Extracts factual claims, searches for supporting evidence, and evaluates claim support using Gemini
+- **✅ Reviewer Agent** — Reviews content quality and provides revision feedback
 
-### **Key Features**
+### Workflow
 
-✅ **Real Web Search** - Integrated with Tavily API for live research  
-✅ **Multi-Agent Orchestration** - Autonomous task routing with LangGraph  
-✅ **Quality Control** - Iterative feedback loops ensure 0.90+ quality scores  
-✅ **Production Ready** - Rate limiting, error handling, checkpointing, logging  
-✅ **Type Safe** - Pydantic models with validation  
-✅ **Extensible** - Easy to add new agents or tools
+```text
+User Task
+   │
+   ▼
+Supervisor
+   │
+   ▼
+Researcher ──────► Tavily Web Search
+   │
+   ▼
+Content Creator ─► Gemini
+   │
+   ▼
+Fact Checker ────► Tavily Evidence + Gemini Evaluation
+   │
+   ▼
+Reviewer
+   │
+   ├── Request Revision ──► Content Creator
+   │                         │
+   │                         ▼
+   │                     Fact Checker
+   │
+   ▼
+Final Output
 
----
+🚀 Key Features
+Multi-agent orchestration using LangGraph
+Google Gemini integration using langchain-google-genai
+Live web research using Tavily
+Automated factual claim verification
+Evidence-based fact-checking before final review
+Iterative content revision through Supervisor routing
+Shared typed workflow state using TypedDict/Pydantic-based schemas
+Checkpointing and workflow state management
+Error handling and execution logging
+🔍 Fact Checker
 
-## 🏗️ Architecture
-```
-┌─────────────────────────────────────────────────────┐
-│                    USER REQUEST                      │
-│         "Research quantum computing trends"          │
-└────────────────────┬────────────────────────────────┘
-                     │
-                     ▼
-            ┌─────────────────┐
-            │   SUPERVISOR    │◄──────┐
-            │     AGENT       │       │
-            └────────┬────────┘       │
-                     │                │
-        ┌────────────┼────────────────┼──────────┐
-        │            │                │          │
-        ▼            ▼                ▼          │
-   ┌─────────┐ ┌──────────┐   ┌──────────┐       │
-   │RESEARCH │ │ CONTENT  │   │ REVIEWER │       │
-   │  AGENT  │ │ CREATOR  │   │  AGENT   │       │
-   │         │ │  AGENT   │   │          │       │
-   │• Tavily │ │• Generate│   │• Validate│       │
-   │  Search │ │  Content │   │• Score   │       │
-   │• Extract│ │•Citations│   │• Feedback│       │
-   └────┬────┘ └─────┬────┘   └─────┬────┘       │
-        │            │              │            │
-        └────────────┴──────────────┴────────────┘
-                     │
-                     ▼
-            ┌─────────────────┐
-            │  FINAL OUTPUT   │
-            └─────────────────┘
-```
+The custom Fact Checker agent is responsible for an additional verification stage between content generation and final review.
 
----
+Process
+Extract important factual claims from the generated content
+Search Tavily for supporting web evidence
+Send the claims and retrieved evidence to Gemini
+Classify claims as:
+SUPPORTED
+PARTIALLY SUPPORTED
+UNSUPPORTED
+Calculate a simple factuality score
+Store the fact-check report and score in the shared workflow state
 
-## 🚀 Quick Start
+When content is revised, the fact-check status is reset so the updated draft can be checked again.
 
-### **Prerequisites**
+🧠 Technology Stack
+Python
+LangGraph
+LangChain
+Google Gemini
+Tavily Search API
+Pydantic
+TypedDict
+python-dotenv
+📁 Project Structure
+multi-agent-research-pipeline-gemini/
+│
+├── agents/
+│   ├── base_agent.py
+│   ├── researcher.py
+│   ├── content_creator.py
+│   ├── supervisor.py
+│   └── fact_checker.py
+│
+├── config/
+│   └── settings.py
+│
+├── state/
+│   └── schemas.py
+│
+├── workflows/
+│   └── graph_builder.py
+│
+├── tools/
+├── utils/
+├── tests/
+├── examples/
+├── screenshots/
+│
+├── main.py
+├── requirements.txt
+├── .env.example
+└── README.md
+⚙️ Quick Start
+Prerequisites
+Python 3.10+
+Google Gemini API key
+Tavily API key
+Installation
+git clone https://github.com/mohitraj0901/multi-agent-research-pipeline-gemini.git
 
-- Python 3.10+
-- Azure OpenAI account with API access
-- Tavily API key (free tier: 1000 searches/month)
+cd multi-agent-research-pipeline-gemini
 
-### **Installation**
-```bash
-# Clone repository
-git clone https://github.com/harshv2013/multi-agent-research-pipeline
-cd multi-agent-research-pipeline
-
-# Create virtual environment
 python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+Activate virtual environment
 
-# Install dependencies
+Windows PowerShell:
+
+.\.venv\Scripts\Activate.ps1
+
+Linux/macOS:
+
+source .venv/bin/activate
+Install dependencies
 pip install -r requirements.txt
-```
+Configuration
 
-### **Configuration**
+Create a .env file in the project root:
 
-Create `.env` file in project root:
-```env
-# Azure OpenAI
-AZURE_OPENAI_ENDPOINT=https://your-resource.openai.azure.com/
-AZURE_OPENAI_API_KEY=your-api-key-here
-AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4
+GEMINI_API_KEY=your-gemini-api-key
+TAVILY_API_KEY=your-tavily-api-key
 
-# Tavily Search
-TAVILY_API_KEY=tvly-your-key-here
-
-# Model Configuration
 LLM_TEMPERATURE=0.7
 LLM_MAX_TOKENS=4000
 
-# Agent Configuration
 MAX_ITERATIONS=15
-```
-
-### **Run**
-```bash
-# Basic usage
-python main.py "Research quantum computing applications"
-
-# With options
-python main.py "Explain microservices architecture" \
-  --content-type article \
-  --audience "software engineers" \
-  --verbose
-
-# Save output
-python main.py "AI ethics overview" --save-output output.txt
-```
-
----
-
-## 📊 Example Output
-
-**Input:**
-```bash
-python main.py "Explain how transformer architecture works in deep learning"
-```
-
-**Output:**
-```
-================================================================================
-MULTI-AGENT RESEARCH & CONTENT PIPELINE
-================================================================================
-
-Task: Explain how transformer architecture works in deep learning
-Content Type: article
-Audience: software engineers
-
-✓ Tavily search initialized successfully
-🔍 Searching Tavily: 'transformer architecture deep learning'
-✓ Found 5 results from Tavily
-
-Executing workflow...
-  Step 1: SUPERVISOR completed
-  Step 2: RESEARCHER completed
-  Step 3: CONTENT_CREATOR completed
-  Step 4: REVIEWER completed
-
-================================================================================
-RESULTS
-================================================================================
-
-[Generated professional article with citations and proper structure]
-
---------------------------------------------------------------------------------
-STATISTICS
---------------------------------------------------------------------------------
-Word Count: 1,245
-Quality Score: 0.93/1.0
-Sources Used: 5
-Revisions: 1
-Total Iterations: 7
-
-✓ Workflow completed successfully!
-```
-
-![Agentic AI Demo 1](screenshots/demo1.png)
-![Agentic AI Demo 2](screenshots/demo2.png)
----
-
-## 🛠️ Project Structure
-```
-multi-agent-research-pipeline/
-├── config/                 # Configuration management
-│   ├── settings.py         # Pydantic settings with Azure OpenAI
-│   └── prompts.py          # Agent system prompts
-├── agents/                 # Agent implementations
-│   ├── base_agent.py       # Base class with LLM integration
-│   ├── supervisor.py       # Orchestrator agent
-│   ├── researcher.py       # Research agent with Tavily
-│   ├── content_creator.py  # Content generation
-│   └── reviewer.py         # Quality control
-├── tools/                  # Agent tools
-│   ├── web_search.py       # Tavily search integration
-│   ├── data_extraction.py  # Text analysis & extraction
-│   └── validation.py       # Content validation
-├── state/                  # State management
-│   ├── schemas.py          # TypedDict state definitions
-│   └── memory.py           # Conversation memory
-├── workflows/              # LangGraph workflows
-│   ├── graph_builder.py    # Workflow construction
-│   └── checkpointer.py     # State persistence
-├── utils/                  # Utilities
-│   ├── logger.py           # Structured logging
-│   ├── rate_limiter.py     # API rate limiting
-│   └── visualizer.py       # Workflow visualization
-├── examples/               # Usage examples
-├── tests/                  # Unit tests
-├── main.py                 # Entry point
-├── requirements.txt        # Dependencies
-└── .env.example           # Environment template
-```
-
----
 
-## 🎓 Key Concepts Demonstrated
+Never commit your .env file or API keys to GitHub.
 
-### **Multi-Agent Patterns**
-- ✅ Supervisor pattern for orchestration
-- ✅ Specialized agents with clear responsibilities
-- ✅ Inter-agent communication via state
-- ✅ Conditional routing based on context
+Run
+python main.py
+🧪 Example Run
 
-### **LangGraph Features**
-- ✅ StateGraph for workflow management
-- ✅ Conditional edges for dynamic routing
-- ✅ Checkpointing for state persistence
-- ✅ TypedDict with reducers for state
-
-### **Production Patterns**
-- ✅ Rate limiting with token bucket algorithm
-- ✅ Error handling and retry logic
-- ✅ Structured logging with context
-- ✅ Type safety with Pydantic
+The pipeline can research a topic, generate content, fact-check the generated claims, and then send the content through the reviewer.
 
-### **Azure OpenAI Integration**
-- ✅ Function calling for tool use
-- ✅ Streaming responses
-- ✅ Token optimization
-- ✅ Cost management
+Example workflow:
 
----
+RESEARCHER completed
+        ↓
+CONTENT_CREATOR completed
+        ↓
+FACT_CHECKER completed
+        ↓
+REVIEWER completed
+        ↓
+FINAL OUTPUT
+📊 Validation
 
-## 🔧 Customization
+The modified pipeline was tested locally with a complete end-to-end workflow.
 
-### **Change Search Provider**
-
-Currently uses Tavily. To switch providers, modify `tools/web_search.py`:
-```python
-# Easy to swap: Tavily → Serper, Brave, DuckDuckGo
-```
-
-### **Add New Agent**
-
-1. Create agent in `agents/your_agent.py`
-2. Inherit from `BaseAgent`
-3. Implement `execute()` method
-4. Add to workflow in `workflows/graph_builder.py`
+A successful run demonstrated:
 
-### **Modify Content Types**
+Research through Tavily
+Content generation through Gemini
+Fact-checking with web evidence
+Supervisor routing through the Fact Checker stage
+Final reviewer approval
+Successful final output generation
 
-Edit `config/prompts.py` to change:
-- Agent instructions
-- Output formats
-- Quality criteria
-
----
+One local test run completed in 5 workflow iterations, with a reviewer quality score of 0.91/1.0.
 
-## 📈 Performance Metrics
+The reported result is from a local test run and is not intended as a general benchmark.
 
-**Typical Execution:**
-- **Iterations**: 5-7 steps
-- **API Calls**: 8-12 requests
-- **Quality Score**: 0.90-0.95
-- **Execution Time**: 45-90 seconds
-- **Token Usage**: 8K-15K tokens
+📜 License
 
-**Optimization Features:**
-- Caching reduces redundant searches
-- Rate limiting prevents quota exhaustion
-- Early approval for high-quality content
-- Checkpointing enables resumption
+MIT License
 
----
 
-## 🧪 Testing
-```bash
-# Run all tests
-pytest
+**Important:** Is README mein humne intentionally ye clear rakha hai ki project **existing multi-agent workflow ko extend** karta hai. Ye tumhe original author hone ka misleading impression nahi dega.
 
-# Run with coverage
-pytest --cov=. --cov-report=html
+Save karne ke baad **abhi commit/push mat karna**.
 
-# Run specific test
-pytest tests/test_agents.py -v
-```
-
----
-
-## 🐛 Debugging in VS Code
-
-### **Setup**
-
-Create `.vscode/launch.json`:
-```json
-{
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "Debug Multi-Agent",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder}/main.py",
-            "console": "integratedTerminal",
-            "justMyCode": true
-        }
-    ]
-}
-```
-
-### **Hardcode Debug Query**
-
-Edit `main.py` to set debug values:
-```python
-class DebugArgs:
-    task = "Your test query here"
-    content_type = "article"
-    verbose = True
-```
-
-Press **F5** to debug!
-
----
-
-## 🔍 Common Issues
-
-### **Issue: Tavily API Error**
-```
-Solution: Verify TAVILY_API_KEY in .env file
-Free tier: 1000 searches/month at tavily.com
-```
-
-### **Issue: Azure OpenAI Authentication**
-```
-Solution: Check AZURE_OPENAI_ENDPOINT and AZURE_OPENAI_API_KEY
-Ensure deployment name matches your Azure resource
-```
-
-### **Issue: Low Quality Scores**
-```
-Solution: Adjust weights in agents/reviewer.py _combine_reviews()
-Increase LLM weight: (overall_score * 0.7 + validation * 0.3)
-```
-
----
-
-## 🤝 Contributing
-
-Contributions welcome! Please:
-
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing`)
-5. Open Pull Request
-
----
-
-## 📝 License
-
-This project is licensed under the MIT License - see [LICENSE](LICENSE) file for details.
-
----
-
-## 🙏 Acknowledgments
-
-- **LangChain/LangGraph** - Agent orchestration framework
-- **Tavily** - AI-optimized search API
-- **Azure OpenAI** - LLM infrastructure
-- **Pydantic** - Data validation
-
----
-
-## 📧 Contact
-
-**Harsh Vardhan** - harsh2013@gmail.com
-
-**Linkedin** https://www.linkedin.com/in/harsh-vardhan-60b6aa106/
-
-**Project Link**: [https://github.com/harshv2013/multi-agent-research-pipeline](https://github.com/harshv2013/multi-agent-research-pipeline)
-
-**Built with ❤️ using LangGraph, Azure OpenAI, and Python**
+Bas mujhe bata **README save ho gaya**. Phir next step
