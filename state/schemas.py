@@ -68,6 +68,11 @@ class AgentState(TypedDict):
     content_type: str  # Type of content to create (blog, report, etc.)
     content_draft: str  # Generated content
     content_version: int  # Track revisions
+
+    # Fact checker outputs
+    fact_check_report: str
+    fact_check_score: float
+    fact_check_status: Literal["pending", "completed", "failed"]
     
     # Reviewer outputs
     review_score: float  # Overall quality score (0-10)
@@ -93,7 +98,7 @@ class SupervisorDecision(TypedDict):
     - Clear routing logic
     - Supports conditional edges in LangGraph
     """
-    next_agent: Literal["researcher", "content_creator", "reviewer", "human_review", "finish"]
+    next_agent: Literal["researcher", "content_creator", "fact_checker", "reviewer", "human_review", "finish"]
     reasoning: str  # Why this decision was made
     instructions: str  # Specific instructions for next agent
     confidence: float  # Confidence in decision (0-1)
@@ -152,6 +157,9 @@ def create_initial_state(task: str, context: dict = None) -> AgentState:
         content_type="blog post",
         content_draft="",
         content_version=0,
+        fact_check_report="",
+        fact_check_score=0.0,
+        fact_check_status="pending",
         review_score=0.0,
         review_feedback="",
         review_decision="request_revision",

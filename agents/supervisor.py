@@ -213,6 +213,17 @@ class SupervisorAgent(BaseAgent):
             context_parts.append(f"✓ Content draft created (version {state['content_version']})")
         else:
             context_parts.append("✗ Content not yet created")
+
+                # Add fact-check status
+        if state['fact_check_status'] == 'completed':
+            context_parts.append(
+                f"✓ Fact checking completed (score: {state['fact_check_score']:.2f})"
+            )
+        elif state['fact_check_status'] == 'failed':
+            context_parts.append("✗ Fact checking failed")
+        else:
+            context_parts.append("✗ Fact checking not yet completed")
+        
         
         # Add review status
         if state['review_feedback']:
@@ -254,7 +265,7 @@ class SupervisorAgent(BaseAgent):
 
                     You must respond with a JSON object in this exact format:
                     {{
-                        "next_agent": "researcher|content_creator|reviewer|human_review|finish",
+                        "next_agent": "researcher|content_creator|fact_checker|reviewer|human_review|finish",
                         "reasoning": "explanation of why this decision was made",
                         "instructions": "specific instructions for the next agent",
                         "confidence": 0.0-1.0
@@ -263,7 +274,8 @@ class SupervisorAgent(BaseAgent):
                     Decision rules:
                     - If no research done yet → "researcher"
                     - If research done but no content → "content_creator"
-                    - If content created but not reviewed → "reviewer"
+                    - If content created but fact checking is not completed → "fact_checker"
+                    - If fact checking is completed but content has not been reviewed → "reviewer"
                     - If review failed and revisions < 3 → "content_creator" (with revision instructions)
                     - If review passed or revisions >= 3 → "finish"
                     - If critical error or max iterations → "finish"
@@ -340,7 +352,15 @@ class SupervisorAgent(BaseAgent):
                 instructions='Create content based on research findings',
                 confidence=0.9
             )
-        
+
+        if state['fact_check_status'] != 'completed':
+            return SupervisorDecision(
+                next_agent='fact_checker',
+                reasoning='Content created but fact checking is not completed',
+                instructions='Fact-check the content claims against reliable web evidence',
+                confidence=0.9
+            )
+
         if not state['review_feedback']:
             return SupervisorDecision(
                 next_agent='reviewer',

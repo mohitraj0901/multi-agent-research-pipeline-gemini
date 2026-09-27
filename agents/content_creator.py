@@ -69,7 +69,8 @@ class ContentCreatorAgent(BaseAgent):
                 'current_agent': self.name,
                 'content_draft': content_output['content'],
                 'content_version': state['content_version'] + 1,
-                'content_type': content_type
+                'content_type': content_type,
+                'fact_check_status': 'pending',
             }
             
             # Add completion message
